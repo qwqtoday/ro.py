@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from .client import Client
+    from .thumbnails import ThumbnailFormat, SizeTupleOrString, Thumbnail
 
 from typing import List
 from enum import Enum
@@ -220,6 +221,31 @@ class Server(BaseItem):
 
         self.fps: float = data.get("fps")
         self.ping: Optional[int] = data.get("ping")
+    
+    async def get_player_thumbnails(
+            self, 
+            size: SizeTupleOrString, 
+            format: ThumbnailFormat, 
+            requestId: str, 
+            targetId: int = 0, 
+            alias: str = "", 
+            isCircular: bool = False
+        ) -> list[Thumbnail]:
+        from .thumbnails import ThumbnailBatch, ThumbnailBatchType
+        batches = [
+            ThumbnailBatch(
+                token=token,
+                size=size,
+                format=format,
+                type=ThumbnailBatchType.AvatarHeadShot,
+                requestId=requestId,
+                targetId=targetId,
+                alias=alias,
+                isCircular=isCircular
+            )
+            for token in self.player_tokens
+        ]
+        return await self._client.thumbnails.get_batch_thumbnails(batches=batches)
 
     
 class PrivateServer(Server):
